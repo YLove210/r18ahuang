@@ -30,6 +30,19 @@
     background: #000;
   }
 
+  /* 加载提示 */
+  .loading {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff; font-size: 14px;
+    z-index: 998;
+    pointer-events: none;
+    letter-spacing: 1px;
+  }
+  .loading.hide { display: none; }
+
+  /* 点击提示层 */
   .tap-layer {
     position: fixed; inset: 0;
     display: none;
@@ -59,8 +72,11 @@
            webkit-playsinline
            preload="auto"
            controls
-           autoplay></video>
+           autoplay
+           muted></video>
   </div>
+
+  <div class="loading" id="loading">视频加载中...</div>
 
   <div class="tap-layer" id="tapLayer">
     <div class="icon">▶</div>
@@ -68,40 +84,78 @@
   </div>
 
 <script>
-  const video = document.getElementById('myVideo');
-  const tapLayer = document.getElementById('tapLayer');
+  var video = document.getElementById('myVideo');
+  var tapLayer = document.getElementById('tapLayer');
+  var loading = document.getElementById('loading');
 
-  // 直接尝试带声音自动播放
-  async function tryPlay() {
-    try {
-      video.muted = false;   // 明确要求有声音
-      await video.play();
-      tapLayer.classList.remove('show');
-    } catch (err) {
-      // 浏览器拒绝了，显示点击提示
+  // 尝试带声音自动播放
+  function tryPlay() {
+    video.muted = false;
+    var p = video.play();
+    if (p && p.catch) {
+      p.then(function() {
+        tapLayer.classList.remove('show');
+      }).catch(function() {
+        // 带声音失败，退而求其次：先静音自动播放
+        video.muted = true;
+        var p2 = video.play();
+        if (p2 && p2.catch) {
+          p2.then(function() {
+            // 静音播放成功，等用户点屏幕或视频后开声音
+            tapLayer.classList.remove('show');
+          }).catch(function() {
+            // 静音都不行，显示点击提示
+            tapLayer.classList.add('show');
+          });
+        } else {
+          tapLayer.classList.add('show');
+        }
+      });
+    } else {
       tapLayer.classList.add('show');
     }
   }
 
-  window.addEventListener('load', tryPlay);
-
-  // 兜底：用户点一下也立即播放
-  tapLayer.addEventListener('click', async () => {
-    try {
-      video.muted = false;
-      await video.play();
-      tapLayer.classList.remove('show');
-    } catch (e) {}
+  // 视频开始播放后，隐藏提示
+  video.addEventListener('playing', function() {
+    tapLayer.classList.remove('show');
+    loading.classList.add('hide');
   });
 
-  // 尝试锁横屏
-  function tryLockLandscape() {
+  // 加载完成
+  video.addEventListener('canplay', function() {
+    loading.classList.add('hide');
+  });
+
+  // 出错提示
+  video.addEventListener('error', function() {
+    loading.textContent = '视频加载失败，请刷新重试';
+  });
+
+  // 页面加载后尝试自动播放 + 锁横屏
+  window.addEventListener('load', function() {
+    tryPlay();
     if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => {});
+      screen.orientation.lock('landscape').catch(function(){});
     }
-  }
-  window.addEventListener('load', tryLockLandscape);
-  document.body.addEventListener('click', tryLockLandscape, { once: true });
+  });
+
+  // 用户点提示层，强制播放并开声音
+  tapLayer.addEventListener('click', function() {
+    video.muted = false;
+    video.play().catch(function(){});
+    tapLayer.classList.remove('show');
+  });
+
+  // 用户点视频本身也尝试开声音播放
+  video.addEventListener('click', function() {
+    if (video.paused) {
+      video.muted = false;
+      video.play().catch(function(){});
+    } else if (video.muted) {
+      video.muted = false;
+    }
+  });
 </script>
 
 </body>
