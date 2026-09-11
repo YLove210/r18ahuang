@@ -10,39 +10,13 @@
     width: 100%; height: 100%;
     background: #000; overflow: hidden;
   }
-
-  .rotate-wrap {
-    position: fixed;
-    top: 50%; left: 50%;
-    width: 100vh;
-    height: 100vw;
-    transform: translate(-50%, -50%) rotate(90deg);
-    transform-origin: center center;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   video {
-    width: 100%; height: 100%;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
     object-fit: contain;
     background: #000;
   }
-
-  /* 加载提示 */
-  .loading {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    color: #fff; font-size: 14px;
-    z-index: 998;
-    pointer-events: none;
-    letter-spacing: 1px;
-  }
-  .loading.hide { display: none; }
-
-  /* 点击提示层 */
   .tap-layer {
     position: fixed; inset: 0;
     display: none;
@@ -65,18 +39,14 @@
 </head>
 <body>
 
-  <div class="rotate-wrap">
-    <video id="myVideo"
-           src="video.mp4"
-           playsinline
-           webkit-playsinline
-           preload="auto"
-           controls
-           autoplay
-           muted></video>
-  </div>
-
-  <div class="loading" id="loading">视频加载中...</div>
+  <video id="myVideo"
+         src="video.mp4"
+         playsinline
+         webkit-playsinline
+         preload="auto"
+         controls
+         autoplay
+         muted></video>
 
   <div class="tap-layer" id="tapLayer">
     <div class="icon">▶</div>
@@ -86,25 +56,23 @@
 <script>
   var video = document.getElementById('myVideo');
   var tapLayer = document.getElementById('tapLayer');
-  var loading = document.getElementById('loading');
 
-  // 尝试带声音自动播放
+  // 尝试自动播放：先带声音，失败就静音
   function tryPlay() {
     video.muted = false;
     var p = video.play();
     if (p && p.catch) {
       p.then(function() {
         tapLayer.classList.remove('show');
+        tryFullscreen();
       }).catch(function() {
-        // 带声音失败，退而求其次：先静音自动播放
         video.muted = true;
         var p2 = video.play();
         if (p2 && p2.catch) {
           p2.then(function() {
-            // 静音播放成功，等用户点屏幕或视频后开声音
             tapLayer.classList.remove('show');
+            tryFullscreen();
           }).catch(function() {
-            // 静音都不行，显示点击提示
             tapLayer.classList.add('show');
           });
         } else {
@@ -116,42 +84,42 @@
     }
   }
 
-  // 视频开始播放后，隐藏提示
+  // 尝试全屏 + 锁横屏
+  function tryFullscreen() {
+    var el = video;
+    try {
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if (el.webkitEnterFullscreen) el.webkitEnterFullscreen(); // iOS Safari 专用
+    } catch(e) {}
+    // 尝试锁横屏（安卓部分浏览器支持，iOS 不支持也不报错）
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(function(){});
+      }
+    } catch(e) {}
+  }
+
   video.addEventListener('playing', function() {
     tapLayer.classList.remove('show');
-    loading.classList.add('hide');
   });
 
-  // 加载完成
-  video.addEventListener('canplay', function() {
-    loading.classList.add('hide');
-  });
+  window.addEventListener('load', tryPlay);
 
-  // 出错提示
-  video.addEventListener('error', function() {
-    loading.textContent = '视频加载失败，请刷新重试';
-  });
-
-  // 页面加载后尝试自动播放 + 锁横屏
-  window.addEventListener('load', function() {
-    tryPlay();
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(function(){});
-    }
-  });
-
-  // 用户点提示层，强制播放并开声音
+  // 点提示层：开声音 + 播放 + 全屏
   tapLayer.addEventListener('click', function() {
     video.muted = false;
     video.play().catch(function(){});
     tapLayer.classList.remove('show');
+    tryFullscreen();
   });
 
-  // 用户点视频本身也尝试开声音播放
+  // 点视频本身也尝试开声音
   video.addEventListener('click', function() {
     if (video.paused) {
       video.muted = false;
       video.play().catch(function(){});
+      tryFullscreen();
     } else if (video.muted) {
       video.muted = false;
     }
