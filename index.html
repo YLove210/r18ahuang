@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>❤️站长推荐❤️</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .container {
+    position: relative;
+    width: 100vw; height: 100vh;
+    background-image: url('bg.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    padding: 40px 20px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    text-align: center;
+    color: #333;
+  }
+  .title { font-size: 26px; font-weight: bold; margin-bottom: 16px; color: #222; }
+  .desc { font-size: 14px; line-height: 1.6; color: #444; margin-bottom: 6px; }
+  .desc-en { font-size: 13px; color: #666; margin-bottom: 24px; }
+  .btn-group { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+  .btn {
+    min-width: 130px; padding: 12px 24px; font-size: 16px;
+    border-radius: 6px; cursor: pointer; border: 1px solid #000;
+    transition: all 0.2s; background: #fff; color: #000;
+  }
+  .btn-yes { background: #e60012; color: #fff; border-color: #e60012; }
+  .btn-yes:active { background: #b3000e; }
+  .btn-no { cursor: default; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="overlay">
+      <div class="title">您是否已满18岁</div>
+      <div class="desc">以下内容可能不适合未满18岁的人群观看，我们需要确认您的年龄。</div>
+      <div class="desc-en">The following may not be suitable for people under the age of 18 and we need to confirm your age.</div>
+      <div class="btn-group">
+        <button class="btn btn-yes" id="btnYes">已满18岁</button>
+        <button class="btn btn-no" id="btnNo">未满18岁</button>
+      </div>
+    </div>
+  </div>
+<script>
+  document.getElementById('btnYes').onclick = () => location.href = 'video.html';
+  document.getElementById('btnNo').onclick = (e) => e.preventDefault();
+</script>
+</body>
+</html>

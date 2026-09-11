@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>播放中...</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #000; overflow: hidden;
+  }
+
+  .rotate-wrap {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 100vh;
+    height: 100vw;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  video {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .tap-layer {
+    position: fixed; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.75);
+    color: #fff; font-size: 16px;
+    z-index: 999;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .tap-layer.show { display: flex; }
+  .tap-layer .icon {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="rotate-wrap">
+    <video id="myVideo"
+           src="video.mp4"
+           playsinline
+           webkit-playsinline
+           preload="auto"
+           controls
+           autoplay></video>
+  </div>
+
+  <div class="tap-layer" id="tapLayer">
+    <div class="icon">▶</div>
+    <div>点击屏幕开始播放</div>
+  </div>
+
+<script>
+  const video = document.getElementById('myVideo');
+  const tapLayer = document.getElementById('tapLayer');
+
+  // 直接尝试带声音自动播放
+  async function tryPlay() {
+    try {
+      video.muted = false;   // 明确要求有声音
+      await video.play();
+      tapLayer.classList.remove('show');
+    } catch (err) {
+      // 浏览器拒绝了，显示点击提示
+      tapLayer.classList.add('show');
+    }
+  }
+
+  window.addEventListener('load', tryPlay);
+
+  // 兜底：用户点一下也立即播放
+  tapLayer.addEventListener('click', async () => {
+    try {
+      video.muted = false;
+      await video.play();
+      tapLayer.classList.remove('show');
+    } catch (e) {}
+  });
+
+  // 尝试锁横屏
+  function tryLockLandscape() {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+  }
+  window.addEventListener('load', tryLockLandscape);
+  document.body.addEventListener('click', tryLockLandscape, { once: true });
+</script>
+
+</body>
+</html>
