@@ -18,7 +18,6 @@
     object-fit: contain;
     background: #000;
   }
-  /* 点击提示层 */
   .tap-layer {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -70,18 +69,14 @@
     var p = video.play();
     if (p && p.catch) {
       p.then(function() {
-        // 成功，隐藏提示
         tapLayer.classList.remove('show');
       }).catch(function() {
-        // 带声音失败，尝试静音播放
         video.muted = true;
         var p2 = video.play();
         if (p2 && p2.catch) {
           p2.then(function() {
-            // 静音播放成功，隐藏提示
             tapLayer.classList.remove('show');
           }).catch(function() {
-            // 都失败，显示点击提示
             tapLayer.classList.add('show');
           });
         } else {
@@ -93,24 +88,20 @@
     }
   }
 
-  // 视频开始播放后隐藏提示
   video.addEventListener('playing', function() {
     tapLayer.classList.remove('show');
   });
 
-  // 页面加载后尝试播放
   window.addEventListener('load', function() {
     tryPlay();
   });
 
-  // 点击提示层：开声音 + 播放
   tapLayer.addEventListener('click', function() {
     video.muted = false;
     video.play().catch(function(){});
     tapLayer.classList.remove('show');
   });
 
-  // 点击视频本身：暂停时播放，静音时开声音
   video.addEventListener('click', function() {
     if (video.paused) {
       video.muted = false;
